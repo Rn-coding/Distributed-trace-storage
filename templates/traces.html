@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Traces - Trace Analysis System{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>Distributed Traces Explorer</h2>
+  <span style="color: var(--text-muted); font-size: 0.85rem;">Showing {{ traces | length }} of {{ total_count }} matching traces</span>
+</div>
+
+<form method="GET" action="{{ url_for('traces.traces_list') }}" class="filter-bar">
+  <div class="form-group">
+    <label for="service">Service</label>
+    <select id="service" name="service">
+      <option value="">-- All Services --</option>
+      {% for s in services %}
+        <option value="{{ s.service_name }}" {% if selected_service == s.service_name %}selected{% endif %}>
+          {{ s.service_name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">-- All Statuses --</option>
+      <option value="OK" {% if selected_status == 'OK' %}selected{% endif %}>OK</option>
+      <option value="ERROR" {% if selected_status == 'ERROR' %}selected{% endif %}>ERROR</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="min_duration">Min Latency (ms)</label>
+    <input type="number" id="min_duration" name="min_duration" value="{{ min_duration }}" placeholder="e.g. 200" min="0" step="any">
+  </div>
+
+  <div class="form-group">
+    <label for="max_duration">Max Latency (ms)</label>
+    <input type="number" id="max_duration" name="max_duration" value="{{ max_duration }}" placeholder="e.g. 1000" min="0" step="any">
+  </div>
+
+  <button type="submit" class="btn">Filter Traces</button>
+  <a href="{{ url_for('traces.traces_list') }}" class="btn btn-secondary">Reset</a>
+</form>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Trace ID</th>
+        <th>Root Service</th>
+        <th>Root Operation</th>
+        <th>Total Latency</th>
+        <th>Status</th>
+        <th>Start Time (UTC)</th>
+        <th>Spans</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in traces %}
+      <tr>
+        <td>
+          <a href="{{ url_for('traces.trace_detail', trace_id=t.trace_id) }}" class="table-link mono">
+            {{ t.trace_id }}
+          </a>
+        </td>
+        <td>{{ t.root_service }}</td>
+        <td><span class="mono">{{ t.root_operation }}</span></td>
+        <td>{{ t.duration_ms }} ms</td>
+        <td>
+          <span class="badge {% if t.status == 'OK' %}badge-ok{% else %}badge-err{% endif %}">
+            {{ t.status }}
+          </span>
+        </td>
+        <td class="mono" style="font-size: 0.8rem; color: var(--text-muted);">
+          {{ t.start_time.strftime('%Y-%m-%d %H:%M:%S') if t.start_time else 'N/A' }}
+        </td>
+        <td>{{ t.spans | length }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--text-muted);">No traces match the search criteria.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination">
+  <div>Page {{ page }} of {{ total_pages }}</div>
+  <div class="pagination-links">
+    {% if page > 1 %}
+      <a href="{{ url_for('traces.traces_list', page=page-1, service=selected_service, status=selected_status, min_duration=min_duration, max_duration=max_duration) }}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem;">← Previous</a>
+    {% endif %}
+    {% if page < total_pages %}
+      <a href="{{ url_for('traces.traces_list', page=page+1, service=selected_service, status=selected_status, min_duration=min_duration, max_duration=max_duration) }}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem;">Next →</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

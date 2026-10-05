@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Trace Analysis System{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>Operational Overview</h2>
+  <a href="{{ url_for('traces.traces_list') }}" class="btn btn-secondary">Search Traces →</a>
+</div>
+
+<div class="cards-grid">
+  <div class="card">
+    <div class="card-title">Total Ingested Traces</div>
+    <div class="card-value">{{ total_traces }}</div>
+    <div class="card-subtext">Source of Truth: traces</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Failed Traces</div>
+    <div class="card-value" style="color: #f87171;">{{ error_traces }}</div>
+    <div class="card-subtext">
+      {% if total_traces > 0 %}
+        {{ ((error_traces / total_traces) * 100) | round(1) }}% error rate
+      {% else %}
+        0% error rate
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Avg Trace Latency</div>
+    <div class="card-value">{{ avg_latency }} <span style="font-size: 1rem; font-weight: normal; color: var(--text-muted);">ms</span></div>
+    <div class="card-subtext">Across all root transactions</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Monitored Services</div>
+    <div class="card-value">{{ service_count }}</div>
+    <div class="card-subtext">Active microservices</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Slowest Service</div>
+    {% if slowest_service %}
+      <div class="card-value" style="font-size: 1.35rem; color: #fbbf24;">{{ slowest_service.service }}</div>
+      <div class="card-subtext">Avg {{ slowest_service.avg_latency_ms }} ms / span</div>
+    {% else %}
+      <div class="card-value" style="font-size: 1.2rem;">None</div>
+      <div class="card-subtext">No data yet</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="section-header">
+  <h2>Recent Distributed Traces</h2>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Trace ID</th>
+        <th>Root Service</th>
+        <th>Root Operation</th>
+        <th>Duration</th>
+        <th>Status</th>
+        <th>Timestamp (UTC)</th>
+        <th>Spans</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in recent_traces %}
+      <tr>
+        <td>
+          <a href="{{ url_for('traces.trace_detail', trace_id=t.trace_id) }}" class="table-link mono">
+            {{ t.trace_id }}
+          </a>
+        </td>
+        <td>{{ t.root_service }}</td>
+        <td><span class="mono">{{ t.root_operation }}</span></td>
+        <td>{{ t.duration_ms }} ms</td>
+        <td>
+          <span class="badge {% if t.status == 'OK' %}badge-ok{% else %}badge-err{% endif %}">
+            {{ t.status }}
+          </span>
+        </td>
+        <td class="mono" style="font-size: 0.8rem; color: var(--text-muted);">
+          {{ t.start_time.strftime('%Y-%m-%d %H:%M:%S') if t.start_time else 'N/A' }}
+        </td>
+        <td>{{ t.spans | length }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--text-muted);">No traces found in database.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

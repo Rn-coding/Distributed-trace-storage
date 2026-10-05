@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Aggregations & Analytics - Trace Analysis System{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>MongoDB Aggregation Analytics</h2>
+  <span style="color: var(--text-muted); font-size: 0.85rem;">All metrics computed directly via MongoDB pipelines</span>
+</div>
+
+<!-- Aggregation A1 -->
+<div class="section-header" style="margin-top: 1.5rem;">
+  <div>
+    <h3>1. Average Latency by Service (Pipeline A1)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Pipeline: <span class="mono">$unwind "$spans" → $group by spans.service with $avg, $min, $max → $sort</span>
+    </p>
+  </div>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Avg Latency</th>
+        <th>Min Latency</th>
+        <th>Max Latency</th>
+        <th>Total Observed Spans</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in avg_latency %}
+      <tr>
+        <td><strong>{{ row.service }}</strong></td>
+        <td>{{ row.avg_latency_ms }} ms</td>
+        <td>{{ row.min_latency_ms }} ms</td>
+        <td>{{ row.max_latency_ms }} ms</td>
+        <td>{{ row.span_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Aggregation A2 -->
+<div class="section-header" style="margin-top: 2rem;">
+  <div>
+    <h3>2. Error Rate by Service (Pipeline A2)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Pipeline: <span class="mono">$unwind "$spans" → $group total and error conditional sum → $project error_rate_pct</span>
+    </p>
+  </div>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Total Spans</th>
+        <th>Error Spans</th>
+        <th>Error Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in error_rates %}
+      <tr>
+        <td><strong>{{ row.service }}</strong></td>
+        <td>{{ row.total_spans }}</td>
+        <td style="color: {% if row.error_spans > 0 %}#f87171{% else %}var(--text-muted){% endif %};">
+          {{ row.error_spans }}
+        </td>
+        <td>
+          <span class="badge {% if row.error_rate_pct == 0 %}badge-ok{% else %}badge-err{% endif %}">
+            {{ row.error_rate_pct }}%
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Aggregation A3 -->
+<div class="section-header" style="margin-top: 2rem;">
+  <div>
+    <h3>3. Top Slowest Operations (Pipeline A3)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Pipeline: <span class="mono">$unwind "$spans" → $group by {service, operation} → $sort avg_duration desc → $limit</span>
+    </p>
+  </div>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Operation</th>
+        <th>Avg Latency</th>
+        <th>Max Latency</th>
+        <th>Invocations</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in slow_ops %}
+      <tr>
+        <td><strong>{{ row.service }}</strong></td>
+        <td class="mono">{{ row.operation }}</td>
+        <td>{{ row.avg_duration_ms }} ms</td>
+        <td>{{ row.max_duration_ms }} ms</td>
+        <td>{{ row.invocations }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Aggregation A4 -->
+<div class="section-header" style="margin-top: 2rem;">
+  <div>
+    <h3>4. Service Dependency Invocation Frequency (Pipeline A4)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Pipeline: <span class="mono">Map parent-child pairs from spans array → $group by {source, target} → $sort frequency</span>
+    </p>
+  </div>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Caller (Source Service)</th>
+        <th></th>
+        <th>Callee (Target Service)</th>
+        <th>Invocations</th>
+        <th>Child Errors</th>
+        <th>Avg Child Latency</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in dep_freq %}
+      <tr>
+        <td><strong>{{ row.source_service }}</strong></td>
+        <td style="color: var(--accent-blue); font-weight: bold;">→</td>
+        <td><strong>{{ row.target_service }}</strong></td>
+        <td>{{ row.frequency }}</td>
+        <td style="color: {% if row.error_count > 0 %}#f87171{% else %}var(--text-muted){% endif %};">
+          {{ row.error_count }}
+        </td>
+        <td>{{ row.avg_latency_ms }} ms</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Aggregation A5 -->
+<div class="section-header" style="margin-top: 2rem;">
+  <div>
+    <h3>5. Trace Latency Distribution Buckets (Pipeline A5)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted);">
+      Pipeline: <span class="mono">$bucket groupBy duration_ms with boundaries [0, 100, 250, 500, 1000, 5000]</span>
+    </p>
+  </div>
+</div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Latency Range</th>
+        <th>Trace Count</th>
+        <th>Avg Duration</th>
+        <th>Min Duration</th>
+        <th>Max Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in latency_dist %}
+      <tr>
+        <td><strong>{{ row.range }}</strong></td>
+        <td>{{ row.count }}</td>
+        <td>{{ row.avg_duration_ms }} ms</td>
+        <td>{{ row.min_duration_ms }} ms</td>
+        <td>{{ row.max_duration_ms }} ms</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

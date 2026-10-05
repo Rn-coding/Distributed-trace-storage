@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Trace {{ trace.trace_id }} - Trace Analysis System{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <a href="{{ url_for('traces.traces_list') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">← Back to Traces</a>
+    <h2 style="margin-top: 0.25rem;">Trace <span class="mono" style="color: var(--accent-blue);">{{ trace.trace_id }}</span></h2>
+  </div>
+  <form method="POST" action="{{ url_for('traces.delete_trace_action', trace_id=trace.trace_id) }}" onsubmit="return confirm('Are you sure you want to permanently delete this trace document from MongoDB?');">
+    <button type="submit" class="btn btn-danger">Delete Trace</button>
+  </form>
+</div>
+
+<div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.5rem;">
+  <div class="card">
+    <div class="card-title">Root Service</div>
+    <div class="card-value" style="font-size: 1.25rem;">{{ trace.root_service }}</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Root Operation</div>
+    <div class="card-value mono" style="font-size: 1.1rem;">{{ trace.root_operation }}</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Total Duration</div>
+    <div class="card-value">{{ trace.duration_ms }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">ms</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Trace Status</div>
+    <div style="margin-top: 0.35rem;">
+      <span class="badge {% if trace.status == 'OK' %}badge-ok{% else %}badge-err{% endif %}" style="font-size: 1rem; padding: 0.35rem 0.75rem;">
+        {{ trace.status }}
+      </span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Total Spans</div>
+    <div class="card-value">{{ trace.spans | length }}</div>
+  </div>
+</div>
+
+<div class="section-header">
+  <h3>Span Hierarchy & Execution Timeline</h3>
+  <span style="font-size: 0.8rem; color: var(--text-muted);">Relative timeline across total duration ({{ trace.duration_ms }} ms)</span>
+</div>
+
+<div class="tree-container">
+  {% for s in tree_spans %}
+  <div class="tree-row">
+    <div class="span-info" style="padding-left: {{ s.depth * 22 }}px;">
+      <span class="span-branch">
+        {% if s.depth == 0 %}●{% else %}└─{% endif %}
+      </span>
+      <span style="font-weight: 600; color: var(--text-main); margin-right: 0.4rem;">{{ s.service }}</span>
+      <span class="mono" style="color: var(--text-muted); font-size: 0.8rem;">{{ s.operation }}</span>
+    </div>
+
+    <div class="timeline-bar-wrapper">
+      <div class="timeline-bar {% if s.status == 'ERROR' %}status-error{% endif %}"
+           style="left: {{ s.relative_start_pct }}%; width: {{ s.relative_duration_pct }}%;"
+           title="Offset: {{ s.start_offset_ms }}ms, Duration: {{ s.duration_ms }}ms ({{ s.status }})">
+      </div>
+    </div>
+
+    <div class="span-duration-label">
+      <span {% if s.status == 'ERROR' %}style="color: #f87171;"{% endif %}>{{ s.duration_ms }} ms</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section-header">
+  <h3>Embedded Spans Detail</h3>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Span ID</th>
+        <th>Parent Span ID</th>
+        <th>Service</th>
+        <th>Operation</th>
+        <th>Start Offset</th>
+        <th>Duration</th>
+        <th>Status</th>
+        <th>Tags</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in trace.spans %}
+      <tr>
+        <td class="mono">{{ s.span_id }}</td>
+        <td class="mono" style="color: var(--text-muted);">{{ s.parent_span_id or 'None (Root)' }}</td>
+        <td><strong>{{ s.service }}</strong></td>
+        <td class="mono">{{ s.operation }}</td>
+        <td>{{ s.start_offset_ms }} ms</td>
+        <td>{{ s.duration_ms }} ms</td>
+        <td>
+          <span class="badge {% if s.status == 'OK' %}badge-ok{% else %}badge-err{% endif %}">
+            {{ s.status }}
+          </span>
+        </td>
+        <td class="mono" style="font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {{ s.tags if s.tags else '{}' }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

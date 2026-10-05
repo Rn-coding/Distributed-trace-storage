@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Service Dependencies - Trace Analysis System{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2>Materialized Service Dependencies</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+      Collection: <span class="mono" style="color: var(--accent-blue);">service_dependencies</span> (derived directly from trace/span evidence)
+    </p>
+  </div>
+  <form method="POST" action="{{ url_for('analytics.rebuild_dependencies_action') }}">
+    <button type="submit" class="btn">⚡ Rebuild Dependencies</button>
+  </form>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Source Service (Caller)</th>
+        <th style="width: 40px; text-align: center;"></th>
+        <th>Target Service (Callee)</th>
+        <th>Observation Count</th>
+        <th>Error Count</th>
+        <th>Avg Callee Latency</th>
+        <th>Last Seen (UTC)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dep in dependencies %}
+      <tr>
+        <td><strong>{{ dep.source_service }}</strong></td>
+        <td style="color: var(--accent-blue); font-weight: bold; text-align: center;">→</td>
+        <td><strong>{{ dep.target_service }}</strong></td>
+        <td>{{ dep.observation_count }}</td>
+        <td>
+          {% if dep.error_count > 0 %}
+            <span style="color: #f87171; font-weight: 600;">{{ dep.error_count }}</span>
+          {% else %}
+            <span style="color: var(--text-muted);">0</span>
+          {% endif %}
+        </td>
+        <td>{{ dep.avg_latency_ms }} ms</td>
+        <td class="mono" style="font-size: 0.8rem; color: var(--text-muted);">
+          {{ dep.last_seen.strftime('%Y-%m-%d %H:%M:%S') if dep.last_seen else 'N/A' }}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--text-muted);">
+          No materialized dependencies found. Click "Rebuild Dependencies" above to derive from traces.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="margin-top: 1.5rem; background-color: rgba(15, 23, 42, 0.5);">
+  <h4 style="margin-bottom: 0.5rem; color: var(--accent-blue);">Defensible Database Architecture Note:</h4>
+  <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+    Per the project specification, <span class="mono">traces</span> is the single source of truth. 
+    The <span class="mono">service_dependencies</span> collection is a materialized view computed by aggregating directed parent-child span pairs. 
+    Whenever trace data changes or if the derived collection ever loses consistency, executing 
+    <span class="mono">rebuild_service_dependencies()</span> reconstructs the accurate dependency topology from raw trace evidence.
+  </p>
+</div>
+{% endblock %}

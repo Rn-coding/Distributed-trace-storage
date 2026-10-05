@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Jaeger-Inspired Trace Analytics{% endblock %} - MongoDB</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="{{ url_for('traces.dashboard') }}" class="brand">
+        <span>⚡</span> Jaeger Trace Analysis
+      </a>
+      {% if session.get('user') %}
+      <ul class="nav-links">
+        <li><a href="{{ url_for('traces.dashboard') }}" class="{% if request.path == url_for('traces.dashboard') %}active{% endif %}">Dashboard</a></li>
+        <li><a href="{{ url_for('traces.traces_list') }}" class="{% if request.path.startswith('/traces') and not request.path.startswith('/dependencies') %}active{% endif %}">Traces</a></li>
+        <li><a href="{{ url_for('analytics.analytics') }}" class="{% if request.path == url_for('analytics.analytics') %}active{% endif %}">Analytics</a></li>
+        <li><a href="{{ url_for('analytics.dependencies') }}" class="{% if request.path == url_for('analytics.dependencies') %}active{% endif %}">Dependencies</a></li>
+      </ul>
+      <div class="user-info">
+        <span>👤 {{ session['user']['username'] }} ({{ session['user']['role'] }})</span>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+      </div>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if error_message %}
+      <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>BTech Database Systems Project — Jaeger-Inspired NoSQL Trace Analysis System (MongoDB 9.0 + PyMongo + Flask)</p>
+  </footer>
+</body>
+</html>
