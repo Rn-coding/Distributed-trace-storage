@@ -1,0 +1,54 @@
+# Python Basics & Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments & Packages
+.env
+.venv
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# NoSQL Databases & Caching
+# MongoDB: Ignore diagnostic data, local lock files, and logs
+mongod.lock
+*.mongodb
+*.mongo
+mongo-data/
+
+# Redis: Ignore snapshot dumps, append-only files, and process IDs
+*.rdb
+*.aof
+*.pid
+redis.conf
+
+# Neo4j Graph DB
+neo4j-data/
+import/
+
+# Configuration & Credentials (CRITICAL)
+# Protect your NoSQL connection strings, keys, and credentials
+.env.*
+secrets.json
+config.ini
+
+# Testing & Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# IDEs and Operating Systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
