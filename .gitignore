@@ -36,6 +36,7 @@ import/
 # Configuration & Credentials (CRITICAL)
 # Protect your NoSQL connection strings, keys, and credentials
 .env.*
+!.env.example
 secrets.json
 config.ini
 
