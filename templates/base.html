@@ -10,7 +10,7 @@
   <header>
     <nav class="navbar">
       <a href="{{ url_for('traces.dashboard') }}" class="brand">
-        <span>⚡</span> Jaeger Trace Analysis
+        <span>⚡</span> Trace Analysis
       </a>
       {% if session.get('user') %}
       <ul class="nav-links">
@@ -42,9 +42,5 @@
 
     {% block content %}{% endblock %}
   </main>
-
-  <footer>
-    <p>BTech Database Systems Project — Jaeger-Inspired NoSQL Trace Analysis System (MongoDB 9.0 + PyMongo + Flask)</p>
-  </footer>
 </body>
 </html>

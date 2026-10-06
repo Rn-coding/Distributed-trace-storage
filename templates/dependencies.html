@@ -59,9 +59,8 @@
 </div>
 
 <div class="card" style="margin-top: 1.5rem; background-color: rgba(15, 23, 42, 0.5);">
-  <h4 style="margin-bottom: 0.5rem; color: var(--accent-blue);">Defensible Database Architecture Note:</h4>
+  <h4 style="margin-bottom: 0.5rem; color: var(--accent-blue);">Note:</h4>
   <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-    Per the project specification, <span class="mono">traces</span> is the single source of truth. 
     The <span class="mono">service_dependencies</span> collection is a materialized view computed by aggregating directed parent-child span pairs. 
     Whenever trace data changes or if the derived collection ever loses consistency, executing 
     <span class="mono">rebuild_service_dependencies()</span> reconstructs the accurate dependency topology from raw trace evidence.
