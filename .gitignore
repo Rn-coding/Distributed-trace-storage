@@ -48,6 +48,10 @@ htmlcov/
 .tox/
 .nox/
 
+# Agent Skills
+AGENTS.md
+ARCHITECTURE.md
+
 # IDEs and Operating Systems
 .vscode/
 .idea/
