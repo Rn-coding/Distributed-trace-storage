@@ -1,4 +1,4 @@
-# Jaeger-Inspired NoSQL Trace Analysis System (Phase 2)
+# Jaeger-Inspired NoSQL Trace Analysis System
 
 A defensible MongoDB database project for distributed trace ingestion, indexing, aggregation analytics, and dynamic service dependency materialization.
 
@@ -218,22 +218,3 @@ Test coverage includes:
 - `tests/test_dependencies.py`: Reactive rebuild and graph consistency from trace mutations.
 - `tests/test_routes.py`: Unauthenticated redirects, session login/logout, and page rendering.
 - `tests/test_integration.py`: End-to-end clean lifecycle run from DB reset to UI verification.
-
----
-
-## 11. Final Phase 2 Checklist
-
-- [x] 5 meaningful collections (`traces`, `services`, `operations`, `service_dependencies`, `users`)
-- [x] 100+ documents in total (120 traces + metadata)
-- [x] JSON Schema validation rules implemented
-- [x] CRUD demonstrated (Create, Read, Update, Delete)
-- [x] Indexed trace retrieval by ID
-- [x] Trace search and multi-criteria filtering
-- [x] 5 MongoDB aggregation pipelines
-- [x] 2+ justified indexes verified with `explain()`
-- [x] Service dependency analysis dynamically materialized from traces
-- [x] Session authentication & protected routes
-- [x] Responsive server-rendered UI (plain CSS, Jinja2)
-- [x] Deterministic synthetic data generator
-- [x] Comprehensive test suite (15 passed tests)
-- [x] Zero unnecessary infrastructure (no Redis, Kafka, Neo4j, Celery, or Docker)
